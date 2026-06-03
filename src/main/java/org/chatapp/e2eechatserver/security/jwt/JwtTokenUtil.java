@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.chatapp.e2eechatserver.user.entity.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -24,8 +25,13 @@ public class JwtTokenUtil {
     public static final String ACCESS_TOKEN_NAME = "access token";
     public static final String REFRESH_TOKEN_NAME = "refresh token";
 
-    private final Algorithm algorithm = Algorithm.HMAC512("secret");
-    private final JWTVerifier verifier = JWT.require(algorithm).build();
+    private final Algorithm algorithm;
+    private final JWTVerifier verifier;
+
+    public JwtTokenUtil(@Value("${app.jwt.secret}") String jwtSecret) {
+        this.algorithm = Algorithm.HMAC512(jwtSecret);
+        this.verifier = JWT.require(algorithm).build();
+    }
 
     public String generateAccessToken(User user) {
         return JWT.create()
