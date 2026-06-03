@@ -13,19 +13,11 @@ import java.util.Arrays;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Value("app.cors.allowed-origins")
-    private String allowedOrigins;
-
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        String[] origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(str -> !str.isBlank())
-                .toArray(String[]::new);
-
         registry
                 .addEndpoint("/ws")
-                .setAllowedOrigins(allowedOrigins);
+                .setAllowedOriginPatterns("*");
     }
 
     @Override
