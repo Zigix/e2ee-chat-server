@@ -47,7 +47,6 @@ class AuthControllerTest {
         LoginUserRequest request = new LoginUserRequest("testuser", "password123");
         LoginUserResponse response = new LoginUserResponse(
                 "access-token",
-                "refresh-token",
                 1L,
                 "testuser",
                 "{\"kty\":\"EC\"}",

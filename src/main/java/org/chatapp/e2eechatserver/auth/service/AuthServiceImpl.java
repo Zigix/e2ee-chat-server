@@ -45,8 +45,7 @@ public class AuthServiceImpl implements AuthService {
 
         return authMapper.toLoginUserResponse(
                 user,
-                jwtTokenUtil.generateAccessToken(user),
-                jwtTokenUtil.generateRefreshToken(user)
+                jwtTokenUtil.generateAccessToken(user)
         );
     }
 }

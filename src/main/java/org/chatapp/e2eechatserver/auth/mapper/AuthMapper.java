@@ -22,8 +22,8 @@ public class AuthMapper {
 
         VaultDto vaultDto = registerUserRequest.getVault();
         user.setVaultVersion(vaultDto.getVersion());
-        user.setVaultSaltBase64(vaultDto.getKdfSaltB64());
-        user.setVaultIterations(vaultDto.getKdfIterations());
+        user.setKdfSaltB64(vaultDto.getKdfSaltB64());
+        user.setKdfIterations(vaultDto.getKdfIterations());
         user.setWrappedMkB64(vaultDto.getWrappedMkB64());
         user.setWrappedMkIvB64(vaultDto.getWrappedMkIvB64());
         user.setWrappedEcdhPrivB64(vaultDto.getWrappedEcdhPrivB64());
@@ -32,11 +32,10 @@ public class AuthMapper {
         return user;
     }
 
-    public LoginUserResponse toLoginUserResponse(User user, String accessToken, String refreshToken) {
+    public LoginUserResponse toLoginUserResponse(User user, String accessToken) {
         LoginUserResponse response = new LoginUserResponse();
 
         response.setAccessToken(accessToken);
-        response.setRefreshToken(refreshToken);
         response.setUserId(user.getId());
         response.setUsername(user.getUsername());
         response.setPubEcdhJwk(user.getPubEcdhJwk());
@@ -49,8 +48,8 @@ public class AuthMapper {
         VaultDto vaultDto = new VaultDto();
 
         vaultDto.setVersion(user.getVaultVersion());
-        vaultDto.setKdfSaltB64(user.getVaultSaltBase64());
-        vaultDto.setKdfIterations(user.getVaultIterations());
+        vaultDto.setKdfSaltB64(user.getKdfSaltB64());
+        vaultDto.setKdfIterations(user.getKdfIterations());
         vaultDto.setWrappedMkB64(user.getWrappedMkB64());
         vaultDto.setWrappedMkIvB64(user.getWrappedMkIvB64());
         vaultDto.setWrappedEcdhPrivB64(user.getWrappedEcdhPrivB64());

@@ -41,10 +41,10 @@ public class User implements UserDetails {
     private int vaultVersion;
 
     @Column(unique = true, nullable = false)
-    private String vaultSaltBase64;
+    private String kdfSaltB64;
 
     @Column(nullable = false)
-    private int vaultIterations;
+    private int kdfIterations;
 
     @Lob
     @Column(nullable = false, columnDefinition = "LONGTEXT")

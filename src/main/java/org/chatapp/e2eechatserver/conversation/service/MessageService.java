@@ -29,7 +29,6 @@ public class MessageService {
                 .ciphertextB64(msg.ciphertextB64())
                 .ivB64(msg.ivB64())
                 .aadB64(msg.aadB64())
-                .clientMessageId(msg.clientMessageId())
                 .type(MessageType.CHAT)
                 .systemText(null)
                 .build();

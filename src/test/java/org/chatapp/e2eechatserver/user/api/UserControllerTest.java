@@ -112,8 +112,8 @@ class UserControllerTest {
         user.setPassword("encoded-password");
         user.setPubEcdhJwk("alice-public-key");
         user.setVaultVersion(1);
-        user.setVaultSaltBase64("salt");
-        user.setVaultIterations(10000);
+        user.setKdfSaltB64("salt");
+        user.setKdfIterations(10000);
         user.setWrappedMkB64("wrappedMk");
         user.setWrappedMkIvB64("wrappedMkIv");
         user.setWrappedEcdhPrivB64("wrappedEcdhPriv");

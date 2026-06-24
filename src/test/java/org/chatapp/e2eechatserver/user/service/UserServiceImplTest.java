@@ -166,8 +166,8 @@ class UserServiceImplTest {
         user.setPassword("encoded-password");
         user.setPubEcdhJwk(username + "-public-key");
         user.setVaultVersion(1);
-        user.setVaultSaltBase64("salt-" + username);
-        user.setVaultIterations(10000);
+        user.setKdfSaltB64("salt-" + username);
+        user.setKdfIterations(10000);
         user.setWrappedMkB64("wrappedMk");
         user.setWrappedMkIvB64("wrappedMkIv");
         user.setWrappedEcdhPrivB64("wrappedEcdhPriv");

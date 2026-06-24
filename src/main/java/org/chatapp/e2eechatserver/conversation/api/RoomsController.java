@@ -23,7 +23,7 @@ public class RoomsController {
     private final CurrentUserService currentUserService;
     private final MessageService messageService;
 
-    @PostMapping("/dm")
+    @PostMapping("/private-chat")
     public RoomDataResponse createOrGetPrivateRoom(@RequestBody @Valid CreateDmRequest req, Principal principal) {
         Long myUserId = currentUserService.getCurrentUserId(principal);
         return roomService.createOrGetDm(myUserId, req.otherUserId());
