@@ -38,7 +38,6 @@ class MessageServiceTest {
         Long senderId = 1L;
         Long roomId = 2L;
         WsSendMessage message = new WsSendMessage(
-                "client-message-id",
                 3,
                 "ciphertext",
                 "iv",
@@ -67,7 +66,6 @@ class MessageServiceTest {
         assertThat(messageToSave.getCiphertextB64()).isEqualTo("ciphertext");
         assertThat(messageToSave.getIvB64()).isEqualTo("iv");
         assertThat(messageToSave.getAadB64()).isEqualTo("aad");
-        assertThat(messageToSave.getClientMessageId()).isEqualTo("client-message-id");
         assertThat(messageToSave.getType()).isEqualTo(MessageType.CHAT);
         assertThat(messageToSave.getSystemText()).isNull();
     }

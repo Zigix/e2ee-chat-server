@@ -57,7 +57,7 @@ class RoomsControllerTest {
 
         // when / then
         restTestClient.post()
-                .uri("/api/rooms/dm")
+                .uri("/api/rooms/private-chat")
                 .body(request)
                 .exchange()
                 .expectStatus().isOk()
