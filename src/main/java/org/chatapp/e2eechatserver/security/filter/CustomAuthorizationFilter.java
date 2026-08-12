@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.chatapp.e2eechatserver.security.jwt.JwtTokenUtil;
 import org.chatapp.e2eechatserver.user.service.UserService;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,8 +1,8 @@
 package org.chatapp.e2eechatserver.conversation.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.chatapp.e2eechatserver.user.entity.User;
 
 import java.time.Instant;
 
@@ -19,11 +19,13 @@ public class MessageEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "room_id", nullable = false)
-    private Long roomId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
 
-    @Column(name = "sender_id")
-    private Long senderId;
+    @ManyToOne
+    @JoinColumn(name = "sender_id")
+    private User sender;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();

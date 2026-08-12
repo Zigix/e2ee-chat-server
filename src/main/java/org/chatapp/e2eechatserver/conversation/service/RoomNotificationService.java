@@ -8,9 +8,9 @@ import org.chatapp.e2eechatserver.conversation.dto.WsNewMessage;
 import org.chatapp.e2eechatserver.conversation.entity.MessageEntity;
 import org.chatapp.e2eechatserver.conversation.mapper.MessageMapper;
 import org.chatapp.e2eechatserver.user.service.UserService;
+import org.chatapp.e2eechatserver.ws.WsEvent;
 import org.chatapp.e2eechatserver.ws.WsEventPublisher;
 import org.chatapp.e2eechatserver.ws.WsEventType;
-import org.chatapp.e2eechatserver.ws.WsEvent;
 import org.chatapp.e2eechatserver.ws.events.*;
 import org.springframework.stereotype.Service;
 

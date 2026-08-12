@@ -4,8 +4,12 @@ import org.chatapp.e2eechatserver.conversation.dto.WsNewMessage;
 import org.chatapp.e2eechatserver.conversation.dto.WsSendMessage;
 import org.chatapp.e2eechatserver.conversation.entity.MessageEntity;
 import org.chatapp.e2eechatserver.conversation.entity.MessageType;
+import org.chatapp.e2eechatserver.conversation.entity.Room;
 import org.chatapp.e2eechatserver.conversation.mapper.MessageMapper;
 import org.chatapp.e2eechatserver.conversation.repository.MessageRepository;
+import org.chatapp.e2eechatserver.conversation.repository.RoomRepository;
+import org.chatapp.e2eechatserver.user.entity.User;
+import org.chatapp.e2eechatserver.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -29,6 +34,12 @@ class MessageServiceTest {
     @Mock
     private MessageMapper messageMapper;
 
+    @Mock
+    private RoomRepository roomRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private MessageService messageService;
 
@@ -37,6 +48,8 @@ class MessageServiceTest {
         // given
         Long senderId = 1L;
         Long roomId = 2L;
+        Room room = room(roomId);
+        User sender = user(senderId, "sender");
         WsSendMessage message = new WsSendMessage(
                 3,
                 "ciphertext",
@@ -47,6 +60,8 @@ class MessageServiceTest {
         savedMessage.setId(10L);
         Instant beforeSave = Instant.now();
 
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
         when(messages.save(org.mockito.ArgumentMatchers.any(MessageEntity.class))).thenReturn(savedMessage);
 
         // when
@@ -59,8 +74,10 @@ class MessageServiceTest {
         verify(messages).save(messageCaptor.capture());
 
         MessageEntity messageToSave = messageCaptor.getValue();
-        assertThat(messageToSave.getRoomId()).isEqualTo(roomId);
-        assertThat(messageToSave.getSenderId()).isEqualTo(senderId);
+        assertThat(messageToSave.getRoom()).isSameAs(room);
+        assertThat(messageToSave.getRoom().getId()).isEqualTo(roomId);
+        assertThat(messageToSave.getSender()).isSameAs(sender);
+        assertThat(messageToSave.getSender().getId()).isEqualTo(senderId);
         assertThat(messageToSave.getCreatedAt()).isBetween(beforeSave, Instant.now());
         assertThat(messageToSave.getKeyVersion()).isEqualTo(3);
         assertThat(messageToSave.getCiphertextB64()).isEqualTo("ciphertext");
@@ -98,11 +115,13 @@ class MessageServiceTest {
     void createSystemMessage_givenRoomIdAndText_whenCreateSystemMessage_thenSavesSystemMessageAndReturnsSavedEntity() {
         // given
         Long roomId = 2L;
+        Room room = room(roomId);
         String text = "User joined the room";
         MessageEntity savedMessage = new MessageEntity();
         savedMessage.setId(10L);
         Instant beforeSave = Instant.now();
 
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
         when(messages.save(org.mockito.ArgumentMatchers.any(MessageEntity.class))).thenReturn(savedMessage);
 
         // when
@@ -115,11 +134,12 @@ class MessageServiceTest {
         verify(messages).save(messageCaptor.capture());
 
         MessageEntity messageToSave = messageCaptor.getValue();
-        assertThat(messageToSave.getRoomId()).isEqualTo(roomId);
+        assertThat(messageToSave.getRoom()).isSameAs(room);
+        assertThat(messageToSave.getRoom().getId()).isEqualTo(roomId);
         assertThat(messageToSave.getType()).isEqualTo(MessageType.SYSTEM);
         assertThat(messageToSave.getSystemText()).isEqualTo(text);
         assertThat(messageToSave.getCreatedAt()).isBetween(beforeSave, Instant.now());
-        assertThat(messageToSave.getSenderId()).isNull();
+        assertThat(messageToSave.getSender()).isNull();
         assertThat(messageToSave.getCiphertextB64()).isNull();
         assertThat(messageToSave.getIvB64()).isNull();
         assertThat(messageToSave.getAadB64()).isNull();
@@ -129,8 +149,8 @@ class MessageServiceTest {
     private static MessageEntity messageEntity(Long id) {
         MessageEntity message = new MessageEntity();
         message.setId(id);
-        message.setRoomId(2L);
-        message.setSenderId(1L);
+        message.setRoom(room(2L));
+        message.setSender(user(1L, "testuser"));
         message.setCreatedAt(Instant.parse("2026-01-01T10:00:00Z").plusSeconds(id));
         message.setKeyVersion(3);
         message.setType(MessageType.CHAT);
@@ -141,12 +161,25 @@ class MessageServiceTest {
         return message;
     }
 
+    private static Room room(Long id) {
+        Room room = new Room();
+        room.setId(id);
+        return room;
+    }
+
+    private static User user(Long id, String username) {
+        User user = new User();
+        user.setId(id);
+        user.setUsername(username);
+        return user;
+    }
+
     private static WsNewMessage wsNewMessage(Long id) {
         return WsNewMessage.builder()
                 .id(id)
                 .roomId(2L)
                 .senderId(1L)
-                .sender("testuser")
+                .senderUsername("testuser")
                 .createdAt(Instant.parse("2026-01-01T10:00:00Z").plusSeconds(id))
                 .keyVersion(3)
                 .ciphertextB64("ciphertext-" + id)

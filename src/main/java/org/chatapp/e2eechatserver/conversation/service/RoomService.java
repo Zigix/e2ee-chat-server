@@ -38,23 +38,24 @@ public class RoomService {
     public RoomDataResponse createOrGetDm(Long myUserId, Long otherUserId) {
         Optional<Room> roomOptional = roomRepository.findPrivateRoomForTwoUsers(RoomType.PRIVATE, myUserId, otherUserId);
 
+
         if (roomOptional.isPresent()) {
             Room room = roomOptional.get();
             return roomMapper.toRoomDataResponse(room, myUserId);
         }
 
-        String myUsername = userService.getUsernameByUserId(myUserId);
-        String otherUsername = userService.getUsernameByUserId(otherUserId);
+        User myUser = userService.getUserByUserId(myUserId);
+        User otherUser = userService.getUserByUserId(otherUserId);
 
         Room room = new Room(RoomType.PRIVATE);
         roomRepository.save(room);
 
-        roomMemberRepository.save(new RoomMember(room.getRoomId(), myUserId, MemberRole.MEMBER));
-        roomMemberRepository.save(new RoomMember(room.getRoomId(), otherUserId, MemberRole.MEMBER));
+        roomMemberRepository.save(new RoomMember(room, myUser, MemberRole.MEMBER));
+        roomMemberRepository.save(new RoomMember(room, otherUser, MemberRole.MEMBER));
 
         Map<String, RoomDataResponse> roomDataResponsesForParticularUsers = new HashMap<>();
-        roomDataResponsesForParticularUsers.put(myUsername, roomMapper.toRoomDataResponse(room, myUserId));
-        roomDataResponsesForParticularUsers.put(otherUsername, roomMapper.toRoomDataResponse(room, otherUserId));
+        roomDataResponsesForParticularUsers.put(myUser.getUsername(), roomMapper.toRoomDataResponse(room, myUserId));
+        roomDataResponsesForParticularUsers.put(otherUser.getUsername(), roomMapper.toRoomDataResponse(room, otherUserId));
 
         roomNotificationService.publishPrivateConversationCreated(roomDataResponsesForParticularUsers);
 
@@ -108,10 +109,11 @@ public class RoomService {
 
         roomRepository.save(room);
 
-        roomMemberRepository.save(new RoomMember(room.getRoomId(), groupOwner.getId(), MemberRole.ADMIN));
+        roomMemberRepository.save(new RoomMember(room, groupOwner, MemberRole.ADMIN));
 
         for (Long userId : request.getUserIds()) {
-            roomMemberRepository.save(new RoomMember(room.getRoomId(), userId, MemberRole.MEMBER));
+            User user = userService.getUserByUserId(userId);
+            roomMemberRepository.save(new RoomMember(room, user, MemberRole.MEMBER));
         }
 
         RoomDataResponse roomDataResponse = roomMapper.toRoomDataResponse(room, groupOwner.getId());

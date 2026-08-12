@@ -62,11 +62,13 @@ class RoomMemberServiceTest {
         Long currentUserId = 1L;
         Principal principal = () -> "admin";
         Room room = room(roomId, 4);
-        RoomMember existingMember = new RoomMember(roomId, addedUserId, MemberRole.MEMBER);
+        User addedUser = user(addedUserId, "new-member");
+        RoomMember existingMember = new RoomMember(room, addedUser, MemberRole.MEMBER);
         existingMember.setActive(false);
         RoomDataResponse expectedResponse = roomDataResponse(roomId, 5);
 
         when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userService.getUserByUserId(addedUserId)).thenReturn(addedUser);
         when(currentUserService.getCurrentUserId(principal)).thenReturn(currentUserId);
         when(roomMemberRepository.findByRoomIdAndUserId(roomId, addedUserId)).thenReturn(Optional.of(existingMember));
         when(currentUserService.getCurrentUsername(principal)).thenReturn("admin");
@@ -94,9 +96,11 @@ class RoomMemberServiceTest {
         Long currentUserId = 1L;
         Principal principal = () -> "admin";
         Room room = room(roomId, 4);
+        User addedUser = user(addedUserId, "new-member");
         RoomDataResponse expectedResponse = roomDataResponse(roomId, 5);
 
         when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userService.getUserByUserId(addedUserId)).thenReturn(addedUser);
         when(currentUserService.getCurrentUserId(principal)).thenReturn(currentUserId);
         when(roomMemberRepository.findByRoomIdAndUserId(roomId, addedUserId)).thenReturn(Optional.empty());
         when(currentUserService.getCurrentUsername(principal)).thenReturn("admin");
@@ -114,8 +118,10 @@ class RoomMemberServiceTest {
         verify(roomMemberRepository).save(roomMemberCaptor.capture());
 
         RoomMember savedMember = roomMemberCaptor.getValue();
-        assertThat(savedMember.getRoomId()).isEqualTo(roomId);
-        assertThat(savedMember.getUserId()).isEqualTo(addedUserId);
+        assertThat(savedMember.getRoom()).isSameAs(room);
+        assertThat(savedMember.getRoom().getId()).isEqualTo(roomId);
+        assertThat(savedMember.getUser()).isSameAs(addedUser);
+        assertThat(savedMember.getUser().getId()).isEqualTo(addedUserId);
         assertThat(savedMember.getMemberRole()).isEqualTo(MemberRole.MEMBER);
         assertThat(savedMember.isActive()).isTrue();
 
@@ -148,7 +154,7 @@ class RoomMemberServiceTest {
         Long currentUserId = 1L;
         Principal principal = () -> "admin";
         Room room = room(roomId, 4);
-        RoomMember removedMember = new RoomMember(roomId, removedUserId, MemberRole.MEMBER);
+        RoomMember removedMember = new RoomMember(room, user(removedUserId, "removed-member"), MemberRole.MEMBER);
         RoomDataResponse expectedResponse = roomDataResponse(roomId, 5);
 
         when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
@@ -177,7 +183,7 @@ class RoomMemberServiceTest {
         User leavingUser = user(1L, "leaving-user");
         Principal principal = () -> "leaving-user";
         Room room = room(roomId, 4);
-        RoomMember leavingMember = new RoomMember(roomId, leavingUser.getId(), MemberRole.MEMBER);
+        RoomMember leavingMember = new RoomMember(room, leavingUser, MemberRole.MEMBER);
         RoomDataResponse expectedResponse = roomDataResponse(roomId, 4);
         expectedResponse.setRekeyRequired(true);
 
@@ -201,7 +207,7 @@ class RoomMemberServiceTest {
 
     private static Room room(Long roomId, int currentKeyVersion) {
         Room room = new Room();
-        room.setRoomId(roomId);
+        room.setId(roomId);
         room.setType(RoomType.GROUP);
         room.setName("Test room");
         room.setCurrentKeyVersion(currentKeyVersion);

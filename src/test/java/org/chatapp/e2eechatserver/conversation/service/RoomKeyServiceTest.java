@@ -11,6 +11,7 @@ import org.chatapp.e2eechatserver.conversation.mapper.RoomKeyMapper;
 import org.chatapp.e2eechatserver.conversation.mapper.RoomMapper;
 import org.chatapp.e2eechatserver.conversation.repository.RoomKeyEnvelopeRepository;
 import org.chatapp.e2eechatserver.conversation.repository.RoomRepository;
+import org.chatapp.e2eechatserver.user.entity.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -60,12 +61,14 @@ class RoomKeyServiceTest {
         Long myUserId = 1L;
         Long roomId = 10L;
         UploadRoomKeysRequest request = uploadRoomKeysRequest(5, 1L);
+        Room room = room(roomId, 4, false);
         RoomKeyEnvelope firstEnvelope = roomKeyEnvelope(10L, 5, 2L, 1L);
         RoomKeyEnvelope secondEnvelope = roomKeyEnvelope(10L, 5, 3L, 1L);
 
-        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(0), roomId, request.version(), request.wrappedByUserId()))
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(0), room, request.version(), request.wrappedByUserId()))
                 .thenReturn(firstEnvelope);
-        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(1), roomId, request.version(), request.wrappedByUserId()))
+        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(1), room, request.version(), request.wrappedByUserId()))
                 .thenReturn(secondEnvelope);
 
         // when
@@ -75,10 +78,10 @@ class RoomKeyServiceTest {
         InOrder inOrder = inOrder(roomAccessService, roomKeyMapper, roomKeyEnvelopeRepository, roomNotificationService);
         inOrder.verify(roomAccessService).assertActiveMember(roomId, myUserId);
         inOrder.verify(roomAccessService).assertActiveMember(roomId, 2L);
-        inOrder.verify(roomKeyMapper).toKeyEnvelope(request.keyItems().get(0), roomId, 5, 1L);
+        inOrder.verify(roomKeyMapper).toKeyEnvelope(request.keyItems().getFirst(), room, 5, 1L);
         inOrder.verify(roomKeyEnvelopeRepository).save(firstEnvelope);
         inOrder.verify(roomAccessService).assertActiveMember(roomId, 3L);
-        inOrder.verify(roomKeyMapper).toKeyEnvelope(request.keyItems().get(1), roomId, 5, 1L);
+        inOrder.verify(roomKeyMapper).toKeyEnvelope(request.keyItems().get(1), room, 5, 1L);
         inOrder.verify(roomKeyEnvelopeRepository).save(secondEnvelope);
         inOrder.verify(roomNotificationService).publishRoomKeyUpdated(request, roomId);
     }
@@ -122,9 +125,9 @@ class RoomKeyServiceTest {
 
         when(currentUserService.getCurrentUserId(principal)).thenReturn(senderId);
         when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(room));
-        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(0), roomId, request.version(), senderId))
+        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(0), room, request.version(), senderId))
                 .thenReturn(firstEnvelope);
-        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(1), roomId, request.version(), senderId))
+        when(roomKeyMapper.toKeyEnvelope(request.keyItems().get(1), room, request.version(), senderId))
                 .thenReturn(secondEnvelope);
         when(roomMapper.toRoomDataResponse(room, senderId)).thenReturn(expectedResponse);
 
@@ -140,8 +143,8 @@ class RoomKeyServiceTest {
         verify(roomAccessService).assertActiveMember(roomId, senderId);
         verify(roomAccessService).assertActiveMember(roomId, 2L);
         verify(roomAccessService).assertActiveMember(roomId, 3L);
-        verify(roomKeyMapper).toKeyEnvelope(request.keyItems().get(0), roomId, 5, senderId);
-        verify(roomKeyMapper).toKeyEnvelope(request.keyItems().get(1), roomId, 5, senderId);
+        verify(roomKeyMapper).toKeyEnvelope(request.keyItems().get(0), room, 5, senderId);
+        verify(roomKeyMapper).toKeyEnvelope(request.keyItems().get(1), room, 5, senderId);
         verify(roomKeyEnvelopeRepository).save(firstEnvelope);
         verify(roomKeyEnvelopeRepository).save(secondEnvelope);
         verify(roomMapper).toRoomDataResponse(room, senderId);
@@ -268,7 +271,7 @@ class RoomKeyServiceTest {
 
     private static Room room(Long roomId, int currentKeyVersion, boolean rekeyRequired) {
         Room room = new Room();
-        room.setRoomId(roomId);
+        room.setId(roomId);
         room.setType(RoomType.GROUP);
         room.setName("Test room");
         room.setCurrentKeyVersion(currentKeyVersion);
@@ -279,15 +282,21 @@ class RoomKeyServiceTest {
 
     private static RoomKeyEnvelope roomKeyEnvelope(Long roomId, int version, Long forUserId, Long wrappedByUserId) {
         RoomKeyEnvelope envelope = new RoomKeyEnvelope();
-        envelope.setRoomId(roomId);
+        envelope.setRoom(room(roomId, 1, false));
         envelope.setVersion(version);
-        envelope.setForUserId(forUserId);
-        envelope.setWrappedByUserId(wrappedByUserId);
+        envelope.setForUser(user(forUserId));
+        envelope.setWrappedByUser(user(wrappedByUserId));
         envelope.setWrappedRoomKeyB64("wrapped-room-key-" + forUserId);
         envelope.setIvB64("iv-" + forUserId);
         envelope.setAadB64("aad-" + forUserId);
 
         return envelope;
+    }
+
+    private static User user(Long id) {
+        User user = new User();
+        user.setId(id);
+        return user;
     }
 
     private static RoomDataResponse roomDataResponse(Long roomId, int currentKeyVersion, boolean rekeyRequired) {

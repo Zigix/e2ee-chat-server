@@ -33,9 +33,11 @@ public class RoomKeyService {
     public void uploadKeys(Long myUserId, Long roomId, UploadRoomKeysRequest req) {
         roomAccessService.assertActiveMember(roomId, myUserId);
 
+        Room room = roomRepository.findById(roomId).orElseThrow(NoSuchElementException::new);
+
         for (UploadRoomKeysRequest.KeyItem keyItem : req.keyItems()) {
             roomAccessService.assertActiveMember(roomId, keyItem.userId());
-            RoomKeyEnvelope roomKeyEnvelope = roomKeyMapper.toKeyEnvelope(keyItem, roomId, req.version(), req.wrappedByUserId());
+            RoomKeyEnvelope roomKeyEnvelope = roomKeyMapper.toKeyEnvelope(keyItem, room, req.version(), req.wrappedByUserId());
             roomKeyEnvelopeRepository.save(roomKeyEnvelope);
         }
 
@@ -60,7 +62,7 @@ public class RoomKeyService {
 
         for (UploadRoomKeysRequest.KeyItem keyItem : req.keyItems()) {
             roomAccessService.assertActiveMember(roomId, keyItem.userId());
-            RoomKeyEnvelope keyEnvelope = roomKeyMapper.toKeyEnvelope(keyItem, room.getRoomId(), req.version(), senderId);
+            RoomKeyEnvelope keyEnvelope = roomKeyMapper.toKeyEnvelope(keyItem, room, req.version(), senderId);
             roomKeyEnvelopeRepository.save(keyEnvelope);
         }
 

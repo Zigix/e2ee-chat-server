@@ -34,17 +34,19 @@ public class RoomMemberService {
         Room room = roomRepository.findById(roomId).orElseThrow(() ->
                 new RoomNotFoundException("Room with that id has not been found"));
 
+        User user = userService.getUserByUserId(userId);
+
         Long currentUserId = currentUserService.getCurrentUserId(principal);
 
         roomAccessService.assertActiveMember(roomId, currentUserId);
 
-        Optional<RoomMember> roomMemberOptional = roomMemberRepository.findByRoomIdAndUserId(room.getRoomId(), userId);
+        Optional<RoomMember> roomMemberOptional = roomMemberRepository.findByRoomIdAndUserId(room.getId(), userId);
         if (roomMemberOptional.isPresent()) {
             RoomMember roomMember = roomMemberOptional.get();
             roomMember.setActive(true);
             roomMemberRepository.save(roomMember);
         } else {
-            roomMemberRepository.save(new RoomMember(room.getRoomId(), userId, MemberRole.MEMBER));
+            roomMemberRepository.save(new RoomMember(room, user, MemberRole.MEMBER));
         }
 
         room.setCurrentKeyVersion(room.getCurrentKeyVersion() + 1);
@@ -68,7 +70,7 @@ public class RoomMemberService {
 
         roomAccessService.assertGroupAdmin(roomId, currentUserId);
 
-        RoomMember roomMember = roomMemberRepository.findByRoomIdAndUserId(room.getRoomId(), userId).orElseThrow();
+        RoomMember roomMember = roomMemberRepository.findByRoomIdAndUserId(room.getId(), userId).orElseThrow();
         roomMember.setActive(false);
 
         room.setCurrentKeyVersion(room.getCurrentKeyVersion() + 1);
@@ -92,7 +94,7 @@ public class RoomMemberService {
 
         roomAccessService.assertActiveMember(roomId, leavingUser.getId());
 
-        RoomMember roomMember = roomMemberRepository.findByRoomIdAndUserId(room.getRoomId(), leavingUser.getId()).orElseThrow();
+        RoomMember roomMember = roomMemberRepository.findByRoomIdAndUserId(room.getId(), leavingUser.getId()).orElseThrow();
         roomMember.setActive(false);
 
         room.setRekeyRequired(true);

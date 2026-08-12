@@ -84,7 +84,7 @@ class AuthServiceImplTest {
         verify(userRepository, never()).save(any(User.class));
     }
 
-    /*@Test
+    @Test
     void login_givenValidLoginRequest_whenLogin_thenAuthenticatesGeneratesTokensAndReturnsMappedResponse() {
         // given
         LoginUserRequest request = new LoginUserRequest("testuser", "password123");
@@ -97,7 +97,6 @@ class AuthServiceImplTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authenticatedToken);
         when(jwtTokenUtil.generateAccessToken(user)).thenReturn("access-token");
-        when(jwtTokenUtil.generateRefreshToken(user)).thenReturn("refresh-token");
         when(authMapper.toLoginUserResponse(user, "access-token"))
                 .thenReturn(expectedResponse);
 
@@ -117,7 +116,7 @@ class AuthServiceImplTest {
 
         verify(jwtTokenUtil).generateAccessToken(user);
         verify(authMapper).toLoginUserResponse(user, "access-token");
-    }*/
+    }
 
     @Test
     void login_givenAuthenticationFailure_whenLogin_thenPropagatesExceptionAndDoesNotGenerateTokens() {

@@ -5,10 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.chatapp.e2eechatserver.user.entity.User;
 
 @Entity
-@Table(name = "room_keys",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"room_id","version","for_user_id"}))
+@Table(name = "room_keys")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,17 +19,20 @@ public class RoomKeyEnvelope {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="room_id", nullable=false)
-    private Long roomId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
 
     @Column(nullable=false)
     private int version;
 
-    @Column(name="for_user_id", nullable=false)
-    private Long forUserId;
+    @ManyToOne
+    @JoinColumn(name = "for_user_id", nullable = false)
+    private User forUser;
 
-    @Column(name="wrapped_by_user_id", nullable=false)
-    private Long wrappedByUserId;
+    @ManyToOne
+    @JoinColumn(name = "wrapped_by_user_id", nullable = false)
+    private User wrappedByUser;
 
     @Lob
     @Column(name="wrapped_room_key_b64", nullable=false)

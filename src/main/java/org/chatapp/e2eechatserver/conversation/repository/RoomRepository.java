@@ -16,8 +16,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("""
             select distinct room
             from Room room
-            join RoomMember member on member.roomId = room.roomId
-            where member.userId = :userId
+            join RoomMember member on member.room.id = room.id
+            where member.user.id = :userId
             """)
     List<Room> findByMemberUserId(@Param("userId") Long userId);
 
@@ -29,19 +29,19 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
               and exists (
                   select 1
                   from RoomMember member
-                  where member.roomId = room.roomId
-                    and member.userId = :userId1
+                  where member.room.id = room.id
+                    and member.user.id = :userId1
               )
               and exists (
                   select 1
                   from RoomMember member
-                  where member.roomId = room.roomId
-                    and member.userId = :userId2
+                  where member.room.id = room.id
+                    and member.user.id = :userId2
               )
               and (
-                  select count(distinct member.userId)
+                  select count(distinct member.user.id)
                   from RoomMember member
-                  where member.roomId = room.roomId
+                  where member.room.id = room.id
               ) = 2
             """)
     Optional<Room> findPrivateRoomForTwoUsers(
@@ -51,6 +51,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select r from Room r where r.roomId = :roomId")
+    @Query("select r from Room r where r.id = :roomId")
     Optional<Room> findByIdForUpdate(@Param("roomId") Long roomId);
 }

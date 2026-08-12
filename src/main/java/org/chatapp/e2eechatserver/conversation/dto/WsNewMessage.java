@@ -9,7 +9,7 @@ public record WsNewMessage(
         Long id,
         Long roomId,
         Long senderId,
-        String sender,
+        String senderUsername,
         Instant createdAt,
 
         Integer keyVersion,

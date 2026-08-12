@@ -84,17 +84,19 @@ class RoomServiceTest {
         // given
         Long myUserId = 1L;
         Long otherUserId = 2L;
+        User myUser = user(myUserId, "alice");
+        User otherUser = user(otherUserId, "bob");
         RoomDataResponse myResponse = roomDataResponse(10L, "bob", RoomType.PRIVATE);
         RoomDataResponse otherResponse = roomDataResponse(10L, "alice", RoomType.PRIVATE);
         RoomDataResponse returnedResponse = roomDataResponse(10L, "bob", RoomType.PRIVATE);
 
         when(roomRepository.findPrivateRoomForTwoUsers(RoomType.PRIVATE, myUserId, otherUserId))
                 .thenReturn(Optional.empty());
-        when(userService.getUsernameByUserId(myUserId)).thenReturn("alice");
-        when(userService.getUsernameByUserId(otherUserId)).thenReturn("bob");
+        when(userService.getUserByUserId(myUserId)).thenReturn(myUser);
+        when(userService.getUserByUserId(otherUserId)).thenReturn(otherUser);
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> {
             Room room = invocation.getArgument(0);
-            room.setRoomId(10L);
+            room.setId(10L);
             return room;
         });
         when(roomMapper.toRoomDataResponse(any(Room.class), org.mockito.ArgumentMatchers.eq(myUserId)))
@@ -111,7 +113,11 @@ class RoomServiceTest {
         ArgumentCaptor<RoomMember> roomMemberCaptor = ArgumentCaptor.forClass(RoomMember.class);
         verify(roomMemberRepository, org.mockito.Mockito.times(2)).save(roomMemberCaptor.capture());
         assertThat(roomMemberCaptor.getAllValues())
-                .extracting(RoomMember::getRoomId, RoomMember::getUserId, RoomMember::getMemberRole)
+                .extracting(
+                        member -> member.getRoom().getId(),
+                        member -> member.getUser().getId(),
+                        RoomMember::getMemberRole
+                )
                 .containsExactly(
                         org.assertj.core.groups.Tuple.tuple(10L, myUserId, MemberRole.MEMBER),
                         org.assertj.core.groups.Tuple.tuple(10L, otherUserId, MemberRole.MEMBER)
@@ -214,13 +220,17 @@ class RoomServiceTest {
         // given
         Principal principal = () -> "alice";
         User groupOwner = user(1L, "alice");
+        User bob = user(2L, "bob");
+        User charlie = user(3L, "charlie");
         CreateGroupRoomRequest request = new CreateGroupRoomRequest("Team", List.of(2L, 3L));
         RoomDataResponse expectedResponse = roomDataResponse(10L, "Team", RoomType.GROUP);
 
         when(currentUserService.getCurrentUser(principal)).thenReturn(groupOwner);
+        when(userService.getUserByUserId(2L)).thenReturn(bob);
+        when(userService.getUserByUserId(3L)).thenReturn(charlie);
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> {
             Room room = invocation.getArgument(0);
-            room.setRoomId(10L);
+            room.setId(10L);
             return room;
         });
         when(roomMapper.toRoomDataResponse(any(Room.class), org.mockito.ArgumentMatchers.eq(groupOwner.getId())))
@@ -240,7 +250,11 @@ class RoomServiceTest {
         ArgumentCaptor<RoomMember> roomMemberCaptor = ArgumentCaptor.forClass(RoomMember.class);
         verify(roomMemberRepository, org.mockito.Mockito.times(3)).save(roomMemberCaptor.capture());
         assertThat(roomMemberCaptor.getAllValues())
-                .extracting(RoomMember::getRoomId, RoomMember::getUserId, RoomMember::getMemberRole)
+                .extracting(
+                        member -> member.getRoom().getId(),
+                        member -> member.getUser().getId(),
+                        RoomMember::getMemberRole
+                )
                 .containsExactly(
                         org.assertj.core.groups.Tuple.tuple(10L, 1L, MemberRole.ADMIN),
                         org.assertj.core.groups.Tuple.tuple(10L, 2L, MemberRole.MEMBER),
@@ -251,7 +265,7 @@ class RoomServiceTest {
 
     private static Room room(Long roomId, RoomType roomType, String name) {
         Room room = new Room();
-        room.setRoomId(roomId);
+        room.setId(roomId);
         room.setType(roomType);
         room.setName(name);
         room.setCurrentKeyVersion(1);

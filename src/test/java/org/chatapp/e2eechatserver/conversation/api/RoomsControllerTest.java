@@ -241,7 +241,7 @@ class RoomsControllerTest {
                 .id(id)
                 .roomId(roomId)
                 .senderId(1L)
-                .sender("alice")
+                .senderUsername("alice")
                 .createdAt(Instant.parse("2026-01-01T10:00:00Z"))
                 .keyVersion(1)
                 .ciphertextB64("ciphertext")

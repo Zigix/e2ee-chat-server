@@ -6,6 +6,7 @@ import org.chatapp.e2eechatserver.conversation.dto.UploadRoomKeysRequest;
 import org.chatapp.e2eechatserver.conversation.dto.WsNewMessage;
 import org.chatapp.e2eechatserver.conversation.entity.MessageEntity;
 import org.chatapp.e2eechatserver.conversation.entity.MessageType;
+import org.chatapp.e2eechatserver.conversation.entity.Room;
 import org.chatapp.e2eechatserver.conversation.entity.RoomType;
 import org.chatapp.e2eechatserver.conversation.mapper.MessageMapper;
 import org.chatapp.e2eechatserver.user.service.UserService;
@@ -60,12 +61,12 @@ class RoomNotificationServiceTest {
         // then
         verify(eventPublisher).sendToUser(eq("alice"), argThat(event ->
                 WsEventType.CONVERSATION_CREATED.equals(event.type())
-                        && event.payload() instanceof ConversationCreatedPayload payload
-                        && payload.roomData() == aliceRoomData));
+                        && event.payload() instanceof ConversationCreatedPayload(RoomDataResponse roomData)
+                        && roomData == aliceRoomData));
         verify(eventPublisher).sendToUser(eq("bob"), argThat(event ->
                 WsEventType.CONVERSATION_CREATED.equals(event.type())
-                        && event.payload() instanceof ConversationCreatedPayload payload
-                        && payload.roomData() == bobRoomData));
+                        && event.payload() instanceof ConversationCreatedPayload(RoomDataResponse roomData)
+                        && roomData == bobRoomData));
     }
 
     @Test
@@ -79,8 +80,8 @@ class RoomNotificationServiceTest {
         // then
         verify(eventPublisher).sendToUsers(eq(List.of("alice", "bob")), argThat(event ->
                 WsEventType.CONVERSATION_CREATED.equals(event.type())
-                        && event.payload() instanceof ConversationCreatedPayload payload
-                        && payload.roomData() == roomData));
+                        && event.payload() instanceof ConversationCreatedPayload(RoomDataResponse data)
+                        && data == roomData));
     }
 
     @Test
@@ -100,8 +101,8 @@ class RoomNotificationServiceTest {
         // then
         verify(eventPublisher).sendToUsers(eq(List.of("alice", "bob")), argThat(event ->
                 WsEventType.GROUP_MEMBER_ADDED.equals(event.type())
-                        && event.payload() instanceof GroupMemberAddedPayload payload
-                        && payload.roomData() == roomData));
+                        && event.payload() instanceof GroupMemberAddedPayload(RoomDataResponse data)
+                        && data == roomData));
         verify(messageService).createSystemMessage(10L, "charlie has been added to the group by alice");
         verifyNewMessageCreated(systemMessage, wsNewMessage);
     }
@@ -125,13 +126,13 @@ class RoomNotificationServiceTest {
         verifyNewMessageCreated(systemMessage, wsNewMessage);
         verify(eventPublisher).sendToUsers(eq(List.of("alice", "bob")), argThat(event ->
                 WsEventType.GROUP_MEMBER_REMOVED.equals(event.type())
-                        && event.payload() instanceof GroupMemberRemovedPayload payload
-                        && payload.roomId().equals(10L)
-                        && payload.removedUsername().equals("charlie")));
+                        && event.payload() instanceof GroupMemberRemovedPayload(Long roomId, String removedUsername)
+                        && roomId.equals(10L)
+                        && removedUsername.equals("charlie")));
         verify(eventPublisher).sendToUser(eq("charlie"), argThat(event ->
                 WsEventType.REMOVED_FROM_GROUP.equals(event.type())
-                        && event.payload() instanceof RemovedFromGroupPayload payload
-                        && payload.roomId().equals(10L)));
+                        && event.payload() instanceof RemovedFromGroupPayload(Long roomId)
+                        && roomId.equals(10L)));
     }
 
     @Test
@@ -153,10 +154,12 @@ class RoomNotificationServiceTest {
         verifyNewMessageCreated(systemMessage, wsNewMessage);
         verify(eventPublisher).sendToUsers(eq(List.of("alice", "bob")), argThat(event ->
                 WsEventType.GROUP_MEMBER_LEFT.equals(event.type())
-                        && event.payload() instanceof GroupMemberLeftPayload payload
-                        && payload.roomId().equals(10L)
-                        && payload.leftUsername().equals("charlie")
-                        && payload.rekeyRequired()));
+                        && event.payload() instanceof GroupMemberLeftPayload(
+                        Long roomId, String leftUsername, boolean rekeyRequired
+                )
+                        && roomId.equals(10L)
+                        && leftUsername.equals("charlie")
+                        && rekeyRequired));
     }
 
     @Test
@@ -178,9 +181,9 @@ class RoomNotificationServiceTest {
         verifyNewMessageCreated(systemMessage, wsNewMessage);
         verify(eventPublisher).sendToUsers(eq(List.of("alice", "bob")), argThat(event ->
                 WsEventType.GROUP_NAME_CHANGED.equals(event.type())
-                        && event.payload() instanceof GroupNameChangedPayload payload
-                        && payload.roomId().equals(10L)
-                        && payload.newName().equals("New group name")));
+                        && event.payload() instanceof GroupNameChangedPayload(Long roomId, String newName)
+                        && roomId.equals(10L)
+                        && newName.equals("New group name")));
     }
 
     @Test
@@ -204,14 +207,14 @@ class RoomNotificationServiceTest {
         // then
         verify(eventPublisher).sendToUser(eq("bob"), argThat(event ->
                 WsEventType.KEY_ENVELOPE_AVAILABLE.equals(event.type())
-                        && event.payload() instanceof KeyEnvelopeAvailablePayload payload
-                        && payload.roomId().equals(10L)
-                        && payload.version().equals(5)));
+                        && event.payload() instanceof KeyEnvelopeAvailablePayload(Long roomId, Integer version)
+                        && roomId.equals(10L)
+                        && version.equals(5)));
         verify(eventPublisher).sendToUser(eq("charlie"), argThat(event ->
                 WsEventType.KEY_ENVELOPE_AVAILABLE.equals(event.type())
-                        && event.payload() instanceof KeyEnvelopeAvailablePayload payload
-                        && payload.roomId().equals(10L)
-                        && payload.version().equals(5)));
+                        && event.payload() instanceof KeyEnvelopeAvailablePayload(Long roomId, Integer version)
+                        && roomId.equals(10L)
+                        && version.equals(5)));
     }
 
     @Test
@@ -236,8 +239,8 @@ class RoomNotificationServiceTest {
                         && event.payload() == wsNewMessage));
         verify(eventPublisher).sendToUsers(eq(List.of("alice", "bob")), argThat(event ->
                 WsEventType.MESSAGE_CREATED_INFO.equals(event.type())
-                        && event.payload() instanceof MessageCreatedInfoPayload payload
-                        && payload.roomId().equals(10L)));
+                        && event.payload() instanceof MessageCreatedInfoPayload(Long roomId)
+                        && roomId.equals(10L)));
     }
 
     private static RoomDataResponse roomDataResponse(Long roomId, String roomName, boolean rekeyRequired) {
@@ -262,7 +265,7 @@ class RoomNotificationServiceTest {
     private static MessageEntity systemMessage(Long id, Long roomId) {
         MessageEntity message = new MessageEntity();
         message.setId(id);
-        message.setRoomId(roomId);
+        message.setRoom(room(roomId));
         message.setType(MessageType.SYSTEM);
         message.setSystemText("system message");
         message.setCreatedAt(Instant.parse("2026-01-01T10:00:00Z"));
@@ -270,10 +273,16 @@ class RoomNotificationServiceTest {
         return message;
     }
 
+    private static Room room(Long id) {
+        Room room = new Room();
+        room.setId(id);
+        return room;
+    }
+
     private static WsNewMessage wsNewMessage(MessageEntity message) {
         return WsNewMessage.builder()
                 .id(message.getId())
-                .roomId(message.getRoomId())
+                .roomId(message.getRoom().getId())
                 .createdAt(message.getCreatedAt())
                 .type(MessageType.SYSTEM.name())
                 .systemText(message.getSystemText())

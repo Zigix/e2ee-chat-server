@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class MessageMapper {
-    private final UserService userService;
-
     public WsNewMessage toWsNewMessage(MessageEntity messageEntity) {
+        Long senderId = messageEntity.getSender() == null ? null : messageEntity.getSender().getId();
+
         WsNewMessage.WsNewMessageBuilder wsNewMessageBuilder = WsNewMessage.builder()
                 .id(messageEntity.getId())
-                .roomId(messageEntity.getRoomId())
-                .senderId(messageEntity.getSenderId())
+                .roomId(messageEntity.getRoom().getId())
+                .senderId(senderId)
                 .createdAt(messageEntity.getCreatedAt())
                 .keyVersion(messageEntity.getKeyVersion())
                 .ciphertextB64(messageEntity.getCiphertextB64())
@@ -24,13 +24,12 @@ public class MessageMapper {
                 .type(messageEntity.getType().name())
                 .systemText(messageEntity.getSystemText());
 
-        if (messageEntity.getSenderId() == null) {
-            wsNewMessageBuilder.sender(null);
+        if (senderId == null) {
+            wsNewMessageBuilder.senderUsername(null);
             return wsNewMessageBuilder.build();
         }
 
-        final String username = userService.getUsernameByUserId(messageEntity.getSenderId());
-        wsNewMessageBuilder.sender(username);
+        wsNewMessageBuilder.senderUsername(messageEntity.getSender().getUsername());
 
         return wsNewMessageBuilder.build();
     }

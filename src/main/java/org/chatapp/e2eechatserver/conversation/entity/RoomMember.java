@@ -5,10 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.chatapp.e2eechatserver.user.entity.User;
 
 @Entity
-@Table(name = "room_members",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"room_id","user_id"}))
+@Table(name = "room_members")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,19 +18,21 @@ public class RoomMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="room_id", nullable=false)
-    private Long roomId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
 
-    @Column(name="user_id", nullable=false)
-    private Long userId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     private boolean isActive = true;
 
     private MemberRole memberRole;
 
-    public RoomMember(Long roomId, Long userId, MemberRole memberRole) {
-        this.roomId = roomId;
-        this.userId = userId;
+    public RoomMember(Room room, User user, MemberRole memberRole) {
+        this.room = room;
+        this.user = user;
         this.memberRole = memberRole;
     }
 }
