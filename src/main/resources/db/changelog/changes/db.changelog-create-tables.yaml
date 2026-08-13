@@ -1,0 +1,278 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202608131246
+      author: zigix
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pub_ecdh_jwk
+                  type: LONGTEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: vault_version
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kdf_salt_b64
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kdf_iterations
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wrapped_mk_b64
+                  type: LONGTEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wrapped_mk_iv_b64
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wrapped_ecdh_priv_b64
+                  type: LONGTEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wrapped_ecdh_priv_iv_b64
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 202608131300
+      author: zigix
+      changes:
+        - createTable:
+            tableName: rooms
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: type
+                  type: VARCHAR(255)
+              - column:
+                  name: current_key_version
+                  type: INT
+                  defaultValueNumeric: "1"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rekey_required
+                  type: BIT(1)
+                  defaultValueBoolean: false
+
+  - changeSet:
+      id: 202608131310
+      author: zigix
+      changes:
+        - createTable:
+            tableName: room_members
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: room_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: BIT(1)
+                  defaultValueBoolean: true
+              - column:
+                  name: member_role
+                  type: TINYINT
+
+        - addForeignKeyConstraint:
+            baseTableName: room_members
+            baseColumnNames: room_id
+            referencedTableName: rooms
+            referencedColumnNames: id
+            constraintName: fk_room_members_room_id_rooms
+
+        - addForeignKeyConstraint:
+            baseTableName: room_members
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_room_members_user_id_users
+
+  - changeSet:
+      id: 202608131322
+      author: zigix
+      changes:
+        - createTable:
+            tableName: room_keys
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: room_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: for_user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wrapped_by_user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wrapped_room_key_b64
+                  type: TINYTEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: iv_b64
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: aad_b64
+                  type: TINYTEXT
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: room_keys
+            baseColumnNames: room_id
+            referencedTableName: rooms
+            referencedColumnNames: id
+            constraintName: fk_room_keys_room_id_rooms
+
+        - addForeignKeyConstraint:
+            baseTableName: room_keys
+            baseColumnNames: for_user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_room_keys_for_user_users
+
+        - addForeignKeyConstraint:
+            baseTableName: room_keys
+            baseColumnNames: wrapped_by_user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_room_keys_wrapped_by_user_id_users
+
+  - changeSet:
+      id: 202608131337
+      author: zigix
+      changes:
+        - createTable:
+            tableName: messages
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: room_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sender_id
+                  type: BIGINT
+              - column:
+                  name: created_at
+                  type: DATETIME(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: key_version
+                  type: INT
+              - column:
+                  name: type
+                  type: VARCHAR(255)
+              - column:
+                  name: system_text
+                  type: VARCHAR(255)
+              - column:
+                  name: ciphertext_b64
+                  type: TINYTEXT
+              - column:
+                  name: iv_b64
+                  type: VARCHAR(200)
+              - column:
+                  name: aad_b64
+                  type: TINYTEXT
+              - column:
+                  name: client_message_id
+                  type: VARCHAR(100)
+
+        - addForeignKeyConstraint:
+            baseTableName: messages
+            baseColumnNames: room_id
+            referencedTableName: rooms
+            referencedColumnNames: id
+            constraintName: fk_messages_room_id_rooms
+
+        - addForeignKeyConstraint:
+            baseTableName: messages
+            baseColumnNames: sender_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_messages_sender_id_users
