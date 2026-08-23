@@ -1,0 +1,36 @@
+# Git metadata
+.git
+.gitignore
+.gitattributes
+
+# Local environment and secrets
+.env
+.env.*
+
+# Maven build output
+target
+build
+out
+
+# IDE/editor files
+.idea
+.vscode
+.settings
+.classpath
+.project
+.factorypath
+*.iml
+*.iws
+*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Project documentation not needed by the Dockerfile
+HELP.md
